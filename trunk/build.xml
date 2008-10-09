@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="BunchPackager" basedir="." default="package">
+
+	<property name="src.dir"       value="${basedir}/src"/>
+	<property name="build.dir"     value="${basedir}/build"/>
+	<property name="classes.dir"   value="${build.dir}/build/classes" />
+	<property name="resources.dir" value="${basedir}/resources"/>
+	
+	<path id="build.classpath">
+		<fileset dir="${basedir}/buildlib">
+			<include name="**/*.jar"/>
+		</fileset>
+	</path>
+	
+	<target name="compile">
+		<delete dir="bin" />
+		<mkdir dir="bin" />
+		<javac srcdir="src" destdir="${classes.dir}" classpathref="build.classpath" debug="true" />
+	</target>
+	
+    <target name="package" depends="compile">
+    	<jar jarfile="${build.dir}/bunchpackager.jar" manifest="${basedir}/manifest.mf">
+    		<fileset dir="${classes.dir}" />
+    		<fileset dir="${resources.dir}" />
+    	</jar>
+    </target>
+
+</project>
+		
