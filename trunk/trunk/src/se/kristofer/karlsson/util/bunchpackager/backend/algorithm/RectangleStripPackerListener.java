@@ -20,7 +20,9 @@ package se.kristofer.karlsson.util.bunchpackager.backend.algorithm;
 
 public interface RectangleStripPackerListener {
 
-	void onNewResult(RectanglePlacement best, int iteration);
+	void onIterationCounter(int iteration);
+	
+	void onNewResult(RectanglePlacement best);
 
 	void onStart();
 

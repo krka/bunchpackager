@@ -113,9 +113,6 @@ public class BunchPackager {
     }
 
     public void execute() {
-		BunchPackagerExitHandler signalHandler = BunchPackagerExitHandler.getInstance();
-		signalHandler.addListener(this);
-    	
         printer.println("Scanning for image directories...");
 		
     	running = true;
@@ -124,7 +121,6 @@ public class BunchPackager {
 		} catch (IOException e) {
 			e.printStackTrace(printer);
 		}
-		signalHandler.removeListener(this);
 
     	printer.println("Done!");
     	running = false;
@@ -202,12 +198,11 @@ public class BunchPackager {
     public void waitForStop() {
     	stop();
     	while (running) {
-    		synchronized (this) {
-    			try {
-					wait();
-				} catch (InterruptedException e) {
-				}
-    		}
+    		try {
+				Thread.sleep(100);
+			} catch (InterruptedException e1) {
+				throw new Error(e1);
+			}
     	}
     }
     
