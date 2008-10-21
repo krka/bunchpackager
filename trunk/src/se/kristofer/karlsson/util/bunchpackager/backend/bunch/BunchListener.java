@@ -25,33 +25,53 @@ import java.io.PrintWriter;
 import se.kristofer.karlsson.util.bunchpackager.backend.algorithm.RectanglePlacement;
 import se.kristofer.karlsson.util.bunchpackager.backend.algorithm.RectangleStripPackerListener;
 
-public class BunchListener implements RectangleStripPackerListener {
+public class BunchListener implements RectangleStripPackerListener, Runnable {
 	private Bunch bunch;
 	private File imageFile;
 	private File dataFile;
 
 	private PrintWriter printer;
 	private boolean needsSave;
-	private boolean hasStored;
+	private boolean active;
+	private long previousOutputTime;
+	private int currentIteration;
+	
 	public BunchListener(Bunch bunch, PrintWriter printer, File imageFile, File dataFile, boolean needsSave) {
 		this.bunch = bunch;
 		this.imageFile = imageFile;
 		this.dataFile = dataFile;
 		this.printer = printer;
 		this.needsSave = needsSave;
+		
+		if (needsSave) {
+			triggerSave();
+		}
+
 	}
 
-	public void onNewResult(RectanglePlacement current, int iteration) {
+	public void onNewResult(RectanglePlacement current) {
 		if (current == null) return;
 
-		needsSave = true;
+		needsIterationOutput();
 		printer.printf("New result: %dx%d - %.1f%% larger than optimum - %d wasted pixels - at iteration: %d\n",
 				current.getWidth(),
 				current.getHeight(),
 				100.0 * current.getArea() / current.getPieceAreaSum() - 100,
 				current.getArea() - current.getPieceAreaSum(),
-				iteration);
+				currentIteration);
 		bunch.setPlacement(current);
+		
+		triggerSave();
+	}
+
+	private void triggerSave() {
+		// First save, so set things up
+		if (!active) {
+			active = true;			
+			Thread t = new Thread(this);
+			t.start();
+		}
+		needsSave = true;
 	}
 
 	public void onStart() {
@@ -62,36 +82,60 @@ public class BunchListener implements RectangleStripPackerListener {
 				current.getHeight(),
 				100.0 * current.getArea() / current.getPieceAreaSum() - 100,
 				current.getArea() - current.getPieceAreaSum());
-				
+	}
+	
+	public void run() {
+		while (active) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				throw new Error(e);
+			}
+
+			if (needsSave) {
+				store(bunch.getPlacement());
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					throw new Error(e);
+				}
+			}
+		}
 	}
 
 	public void onStop() {
-		RectanglePlacement current = bunch.getPlacement();
-		if (needsSave) {
-			store(current);
-		} else {
-			printer.printf("No new result for \"%s\"\n", bunch.getName());
-		}
+		active = false;
 	}
 
 	private void store(RectanglePlacement current) {
-		printer.printf("Saving bunch \"%s\": %dx%d - %.1f%% larger than optimum - %d wasted pixels\n",
+		needsIterationOutput();
+		printer.printf("Saving bunch \"%s\": %dx%d\n",
 				bunch.getName(),
 				current.getWidth(),
-				current.getHeight(),
-				100.0 * current.getArea() / current.getPieceAreaSum() - 100,
-				current.getArea() - current.getPieceAreaSum());
+				current.getHeight());
 		try {
 			if (imageFile != null && dataFile != null) {
 				bunch.store(imageFile, dataFile);
-				hasStored = true;
+				needsSave = false;
 			}
 		} catch (IOException e) {
-			e.printStackTrace(printer);
+			throw new Error(e);
 		}
 	}
+
+	private boolean needsIterationOutput() {
+		long now = System.currentTimeMillis();
+		if (now - previousOutputTime > 10*1000) {
+			previousOutputTime = now;
+			return true;
+		}
+		return false;
+	}
 	
-	public boolean hasStored() {
-		return hasStored;
+	public void onIterationCounter(int iteration) {
+		currentIteration = iteration;
+		if (needsIterationOutput()) {
+			printer.printf("Finished iteration: %d\n", iteration);
+		}		
 	}
 }

@@ -62,7 +62,7 @@ public class BottomLeftHeuristic implements RectangleStripPacker, Runnable {
 		List<Rectangle> workingCopy = cloneAndOrder(rectangles, comparator);
 
 		int width = totalWidth;
-		while (width >= minWidth) {
+		while (!stop && width >= minWidth) {
 			RectanglePlacement current = generatePlacement(workingCopy, width);
 			if (current != null) {
 				if ((best == null || current.getArea() < best.getArea()) &&
@@ -95,7 +95,7 @@ public class BottomLeftHeuristic implements RectangleStripPacker, Runnable {
 			boolean placed = false;
 			for (Integer row: tryRows) {
 				for (Integer col: tryCols) {
-					if (col + rectangle.getWidth() > width) break;
+					if (stop || col + rectangle.getWidth() > width) break;
 					
 					rectangle = rectangle.clone(col, row);
 					if (current.canAdd(rectangle)) {
@@ -109,7 +109,7 @@ public class BottomLeftHeuristic implements RectangleStripPacker, Runnable {
 				if (placed) break;
 			}
 			if (!placed) {
-				throw new RuntimeException("Unable to place rectangle anywhere, " + rectangle);
+				return null;
 			}
 		}
 		
@@ -154,8 +154,7 @@ public class BottomLeftHeuristic implements RectangleStripPacker, Runnable {
 
 		int iteration = 0;
 		long startTime = System.currentTimeMillis();
-		while (!stop &&
-				System.currentTimeMillis() - startTime < maxRuntimeMillis) {
+		while (System.currentTimeMillis() - startTime < maxRuntimeMillis) {
 			
 			iteration++;
 			boolean gotBetter = perform(iteration);
@@ -164,9 +163,10 @@ public class BottomLeftHeuristic implements RectangleStripPacker, Runnable {
 			}
 			
 			// Break if it's already good enough
-			if (goodEnough()) {
+			if (goodEnough() || stop) {
 				break;
 			}
+			notifyIteration(iteration);
 		}
 		notifyStop();
 		running = false;
@@ -210,11 +210,10 @@ public class BottomLeftHeuristic implements RectangleStripPacker, Runnable {
 	public void blockingStop() {
 		nonblockingStop();
 		while (running) {
-			synchronized(this) {
-				try {
-					wait();
-				} catch (InterruptedException e) {
-				}
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				throw new Error(e);
 			}
 		}
 	}
@@ -239,10 +238,16 @@ public class BottomLeftHeuristic implements RectangleStripPacker, Runnable {
 	
 	private void notifyNewResult(int iteration) {
 		for (RectangleStripPackerListener listener: listeners) {
-			listener.onNewResult(best, iteration);
+			listener.onNewResult(best);
 		}
 	}
 
+	private void notifyIteration(int iteration) {
+		for (RectangleStripPackerListener listener: listeners) {
+			listener.onIterationCounter(iteration);
+		}
+	}
+	
 	private void notifyStart() {
 		for (RectangleStripPackerListener listener: listeners) {
 			listener.onStart();
