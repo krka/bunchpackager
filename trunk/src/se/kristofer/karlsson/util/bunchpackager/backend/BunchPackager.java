@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import se.kristofer.karlsson.util.bunchpackager.backend.algorithm.bottomleft.BottomLeftHeuristic;
+import se.kristofer.karlsson.util.bunchpackager.backend.algorithm.holes.BottomLeftHoleHeuristic;
 import se.kristofer.karlsson.util.bunchpackager.backend.bunch.Bunch;
 import se.kristofer.karlsson.util.bunchpackager.backend.bunch.BunchListener;
 
