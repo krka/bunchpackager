@@ -92,16 +92,17 @@ public class BottomLeftHeuristic implements RectangleStripPacker, Runnable {
         tryRows.add(0);
         
 		for (Rectangle rectangle: rectangles) {
+			int width2 = rectangle.getWidth();
 			boolean placed = false;
 			for (Integer row: tryRows) {
 				for (Integer col: tryCols) {
-					if (stop || col + rectangle.getWidth() > width) break;
+					if (stop || col + width2 > width) break;
 					
-					rectangle = rectangle.clone(col, row);
-					if (current.canAdd(rectangle)) {
+					if (current.canAdd(rectangle, col, row)) {
+						rectangle = rectangle.clone(col, row);
 						current.addRectangle(rectangle);
 						tryRows.add(row + rectangle.getHeight());
-						tryCols.add(col + rectangle.getWidth());
+						tryCols.add(col + width2);
 						placed = true;
 						break;
 					}

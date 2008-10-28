@@ -5,11 +5,22 @@
 	<property name="build.dir"     value="${basedir}/build"/>
 	<property name="classes.dir"   value="${build.dir}/classes" />
 	<property name="resources.dir" value="${basedir}/resources"/>
+	<property name="buildlib.dir" value="${basedir}/buildlib"/>
+	<property name="test.classes.dir" value="${build.dir}/test/classes"/>
+	<property name="test.src.dir" value="${basedir}/test/src"/>
 	
 	<path id="build.classpath">
 		<fileset dir="${basedir}/buildlib">
 			<include name="**/*.jar"/>
 		</fileset>
+	</path>
+	
+	<path id="test.classpath">
+		<fileset dir="${basedir}/buildlib">
+			<include name="**/*.jar"/>
+		</fileset>
+      <pathelement location="${classes.dir}"/>
+      <pathelement location="${test.classes.dir}"/>
 	</path>
 	
 	<target name="clean">
@@ -28,5 +39,28 @@
     	</jar>
     </target>
 
+	<target name="testng">
+		<available property="testng.exists" file="${buildlib.dir}/testng.jar" />
+		<fail unless="testng.exists" message="Missing ${buildlib.dir}/testng.jar . Download it from http://testng.org/doc/download.html" />
+		<taskdef resource="testngtasks" classpath="${buildlib.dir}/testng.jar"/>
+	</target>
+		
+	<target name="compile-test" depends="compile, testng" description="Compile test cases">
+		<mkdir dir="${test.classes.dir}" />
+		<javac
+			destdir="${test.classes.dir}"
+			classpathref="build.classpath" debug="true" target="1.5" source="1.5">
+			<src path="${test.src.dir}"/>
+			<compilerarg value="-Xlint" />
+			<compilerarg value="-Xlint:-path" />
+		</javac>
+	</target>
+	
+	<target name="test" depends="testng, compile, compile-test" description="Run test cases">
+		<testng outputdir="${build.dir}/test/reports" haltOnfailure="true" classpathref="test.classpath">
+			<classfileset dir="${test.classes.dir}">
+			</classfileset>
+		</testng>
+	</target>
 </project>
 		

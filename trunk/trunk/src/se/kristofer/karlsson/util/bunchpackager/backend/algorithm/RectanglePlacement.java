@@ -34,13 +34,11 @@ public class RectanglePlacement {
 	
 	private Boolean valid;
 	
-	private boolean overlaps(Rectangle r1, Rectangle r2) {
-		int x1 = r1.getX();
+	public static boolean overlaps(Rectangle r1, Rectangle r2, int x1, int y1) {
 		int x2 = r2.getX();
 		if (x1 >= x2 + r2.getWidth()) return false;
 		if (x2 >= x1 + r1.getWidth()) return false;
 
-		int y1 = r1.getY();
 		int y2 = r2.getY();
 		if (y1 >= y2 + r2.getHeight()) return false;
 		if (y2 >= y1 + r1.getHeight()) return false;
@@ -48,9 +46,13 @@ public class RectanglePlacement {
 		return true;
 	}
 	
-	public boolean canAdd(Rectangle r1) {
+	public static boolean overlaps(Rectangle r1, Rectangle r2) {
+		return overlaps(r1, r2, r1.getX(), r1.getY());
+	}
+	
+	public boolean canAdd(Rectangle r1, int col, int row) {
 		for (Rectangle r2: rectangles) {
-			if (overlaps(r1, r2)) {
+			if (overlaps(r1, r2, col, row)) {
 				return false;
 			}
 		}
@@ -97,7 +99,7 @@ public class RectanglePlacement {
 			for (int j = i + 1; j < n; j++) {
 				Rectangle r2 = rectangles.get(j);
 
-				if (overlaps(r1, r2)) {
+				if (overlaps(r1, r2, r1.getX(), r1.getY())) {
 					System.out.println(i + ", " + j);
 					System.out.println(r1);
 					System.out.println(r2);

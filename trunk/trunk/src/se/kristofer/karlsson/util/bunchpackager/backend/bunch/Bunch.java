@@ -194,7 +194,7 @@ public class Bunch {
 				if (rectangle == null) {
 					return null;
 				}
-        		if (placement.canAdd(rectangle)) {
+        		if (placement.canAdd(rectangle, rectangle.getX(), rectangle.getY())) {
         			placement.addRectangle(rectangle);
         		} else {
         			return null;

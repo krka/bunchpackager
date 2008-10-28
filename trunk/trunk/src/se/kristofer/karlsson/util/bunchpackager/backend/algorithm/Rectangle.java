@@ -71,6 +71,38 @@ public class Rectangle {
 	}
 	
 	public String toString() {
-		return x + "," + y + "-" + (x + width - 1) + "," + (y - height - 1); 
+		return width + "x" + height + "([" + x + "," + y + "]-[" + (x + width - 1) + "," + (y + height - 1) + "])"; 
 	}
+
+	@Override
+	public int hashCode() {
+		final int PRIME = 31;
+		int result = 1;
+		result = PRIME * result + height;
+		result = PRIME * result + width;
+		result = PRIME * result + x;
+		result = PRIME * result + y;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		final Rectangle other = (Rectangle) obj;
+		if (height != other.height)
+			return false;
+		if (width != other.width)
+			return false;
+		if (x != other.x)
+			return false;
+		if (y != other.y)
+			return false;
+		return true;
+	}
+	
 }
